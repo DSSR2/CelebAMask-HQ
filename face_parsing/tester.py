@@ -12,6 +12,7 @@ from torchvision import transforms
 
 import cv2
 import PIL
+from glob import glob
 from unet import unet
 from utils import *
 from PIL import Image
@@ -34,12 +35,7 @@ def make_dataset(dir):
     images = []
     assert os.path.isdir(dir), '%s is not a valid directory' % dir
 
-    f = dir.split('/')[-1].split('_')[-1]
-    print (dir, len([name for name in os.listdir(dir) if os.path.isfile(os.path.join(dir, name))]))
-    for i in range(len([name for name in os.listdir(dir) if os.path.isfile(os.path.join(dir, name))])):
-        img = str(i) + '.jpg'
-        path = os.path.join(dir, img)
-        images.append(path)
+    images = glob(dir+"/*.png")+glob(dir+"/*.jpg")+glob(dir+"/*.jpeg")
    
     return images
 
@@ -94,21 +90,18 @@ class Tester(object):
         self.G.eval() 
         batch_num = int(self.test_size / self.batch_size)
 
-        for i in range(batch_num):
-            print (i)
-            imgs = []
-            for j in range(self.batch_size):
-                path = test_paths[i * self.batch_size + j]
-                img = transform(Image.open(path))
-                imgs.append(img)
+        imgs = []
+        for j in range(len(test_paths)):
+            path = test_paths[j]
+            img = transform(Image.open(path))
+            imgs.append(img)
             imgs = torch.stack(imgs) 
             imgs = imgs.cuda()
             labels_predict = self.G(imgs)
-            labels_predict_plain = generate_label_plain(labels_predict)
-            labels_predict_color = generate_label(labels_predict)
-            for k in range(self.batch_size):
-                cv2.imwrite(os.path.join(self.test_label_path, str(i * self.batch_size + k) +'.png'), labels_predict_plain[k])
-                save_image(labels_predict_color[k], os.path.join(self.test_color_label_path, str(i * self.batch_size + k) +'.png'))
+            labels_predict_plain = generate_label_plain(labels_predict, self.imsize)
+            labels_predict_color = generate_label(labels_predict, self.imsize)
+            cv2.imwrite(os.path.join(self.test_label_path, test_paths[j].split("/")[-1].split(".")[0] +'.png'), labels_predict_plain[0])
+            save_image(labels_predict_color[0], os.path.join(self.test_color_label_path, test_paths[j].split("/")[-1].split(".")[0] +'.png'))
 
     def build_model(self):
         self.G = unet().cuda()
