@@ -80,24 +80,25 @@ class Tester(object):
         self.model_name = config.model_name
 
         self.build_model()
+
     def img_test(self, image):
-        transform = transformer(True, True, True, False, image.size) 
-        self.G.load_state_dict(torch.load(os.path.join(self.model_save_path, self.model_name)))
-        self.G.eval() 
+        self.imsize = int((max(image.size)/32))*32
+        print(self.imsize)
+        transform = transformer(True, True, True, False, self.imsize) 
+        
         img = transform(image).to(self.device)
-        labels_predict = self.G(imgs)
+        img = img.unsqueeze(0)
+        labels_predict = self.G(img)
         labels_predict_plain = generate_label_plain(labels_predict, self.imsize)
         labels_predict_color = generate_label(labels_predict, self.imsize)
         return labels_predict_color[0], labels_predict_plain[0]
+
     def test(self):
         transform = transformer(True, True, True, False, self.imsize) 
         test_paths = make_dataset(self.test_image_path)
         make_folder(self.test_label_path, '')
         make_folder(self.test_color_label_path, '') 
-        self.G.load_state_dict(torch.load(os.path.join(self.model_save_path, self.model_name)))
-        self.G.eval() 
         batch_num = int(self.test_size / self.batch_size)
-
         imgs = []
         for j in range(len(test_paths)):
             path = test_paths[j]
@@ -116,6 +117,10 @@ class Tester(object):
         self.G = unet().to(self.device)
         if self.parallel:
             self.G = nn.DataParallel(self.G)
-
+        if(torch.cuda.is_available()):
+            self.G.load_state_dict(torch.load(os.path.join(self.model_save_path, self.model_name)))
+        else:
+            self.G.load_state_dict(torch.load(os.path.join(self.model_save_path, self.model_name), map_location=torch.device('cpu')))
+        self.G.eval() 
         # print networks
         print("Model Loaded!")

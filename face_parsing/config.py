@@ -2,7 +2,7 @@ from yacs.config import CfgNode as CN
 
 cfg = CN()
 cfg.model = 'parsenet'
-cfg.imsize = 32
+cfg.imsize = 160
 cfg.version = 'parsenet'
 cfg.test_size = 2824
 cfg.model_name = 'model.pth'
