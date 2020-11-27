@@ -1,0 +1,30 @@
+from yacs.config import CfgNode as CN
+
+cfg = CN()
+cfg.model = 'parsenet'
+cfg.imsize = 32
+cfg.version = 'parsenet'
+cfg.test_size = 2824
+cfg.model_name = 'model.pth'
+cfg.model_save_path = './models'
+cfg.sample_path = './samples'
+cfg.img_path = '/content/Data/Images/'
+cfg.test_image_path = '/content/Data/Images/'
+cfg.test_label_path = '/content/Data/Results/'
+cfg.test_color_label_path = '/content/Data/ColorViz/' 
+cfg.parallel = False
+cfg.total_step = 1000000
+cfg.batch_size = 1
+cfg.num_workers = 0
+cfg.g_lr = 0.0002
+cfg.lr_decay = 0.95
+cfg.beta1 = 0.5
+cfg.beta2 = 0.999
+cfg.pretrained_model = None
+cfg.label_path = './Data_preprocessing/train_label'
+cfg.log_path = './logs'
+cfg.model_save_path = './models'
+cfg.sample_path = './samples'
+cfg.log_step = 10
+cfg.sample_step = 100
+cfg.model_save_step = 1.0

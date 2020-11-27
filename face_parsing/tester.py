@@ -43,7 +43,7 @@ class Tester(object):
     def __init__(self, config):
         # exact model and loss
         self.model = config.model
-
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # Model hyper-parameters
         self.imsize = config.imsize
         self.parallel = config.parallel
@@ -80,7 +80,15 @@ class Tester(object):
         self.model_name = config.model_name
 
         self.build_model()
-
+    def img_test(self, image):
+        transform = transformer(True, True, True, False, image.size) 
+        self.G.load_state_dict(torch.load(os.path.join(self.model_save_path, self.model_name)))
+        self.G.eval() 
+        img = transform(image).to(self.device)
+        labels_predict = self.G(imgs)
+        labels_predict_plain = generate_label_plain(labels_predict, self.imsize)
+        labels_predict_color = generate_label(labels_predict, self.imsize)
+        return labels_predict_color[0], labels_predict_plain[0]
     def test(self):
         transform = transformer(True, True, True, False, self.imsize) 
         test_paths = make_dataset(self.test_image_path)
@@ -96,7 +104,8 @@ class Tester(object):
             img = transform(Image.open(path))
             imgs.append(img)
             imgs = torch.stack(imgs) 
-            imgs = imgs.cuda()
+            # imgs = imgs.cuda()
+            imgs = imgs.to(self.device)
             labels_predict = self.G(imgs)
             labels_predict_plain = generate_label_plain(labels_predict, self.imsize)
             labels_predict_color = generate_label(labels_predict, self.imsize)
@@ -104,9 +113,9 @@ class Tester(object):
             save_image(labels_predict_color[0], os.path.join(self.test_color_label_path, test_paths[j].split("/")[-1].split(".")[0] +'.png'))
 
     def build_model(self):
-        self.G = unet().cuda()
+        self.G = unet().to(self.device)
         if self.parallel:
             self.G = nn.DataParallel(self.G)
 
         # print networks
-        print(self.G)
+        print("Model Loaded!")
